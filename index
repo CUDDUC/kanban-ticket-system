@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kanban Ticketing System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .board {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      justify-content: center;
+    }
+
+    .column {
+      background: #ffffff;
+      width: 30%;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .column h2 {
+      text-align: center;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #e9edf3;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .actions button {
+      margin-top: 5px;
+      margin-right: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Kanban Ticketing System</h1>
+
+<div class="board">
+  <div class="column" id="todo">
+    <h2>Todo</h2>
+    <button class="add-btn" onclick="addTicket()">+ Add Ticket</button>
+    <div class="tickets"></div>
+  </div>
+
+  <div class="column" id="inprogress">
+    <h2>In Progress</h2>
+    <div class="tickets"></div>
+  </div>
+
+  <div class="column" id="done">
+    <h2>Done</h2>
+    <div class="tickets"></div>
+  </div>
+</div>
+
+<script>
+  let data = JSON.parse(localStorage.getItem("tickets")) || {
+    todo: [],
+    inprogress: [],
+    done: []
+  };
+
+  function save() {
+    localStorage.setItem("tickets", JSON.stringify(data));
+  }
+
+  function render() {
+    ["todo", "inprogress", "done"].forEach(col => {
+      const container = document.querySelector(`#${col} .tickets`);
+      container.innerHTML = "";
+
+      data[col].forEach((ticket, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <p>${ticket}</p>
+          <div class="actions">
+            ${col !== "todo" ? `<button onclick="move('${col}', 'todo', ${index})">← Todo</button>` : ""}
+            ${col !== "inprogress" ? `<button onclick="move('${col}', 'inprogress', ${index})">→ In Progress</button>` : ""}
+            ${col !== "done" ? `<button onclick="move('${col}', 'done', ${index})">✓ Done</button>` : ""}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    });
+
+    save();
+  }
+
+  function addTicket() {
+    const title = prompt("Enter ticket name:");
+    if (!title) return;
+    data.todo.push(title);
+    render();
+  }
+
+  function move(from, to, index) {
+    const [ticket] = data[from].splice(index, 1);
+    data[to].push(ticket);
+    render();
+  }
+
+  render();
+</script>
+
+</body>
+</html>
