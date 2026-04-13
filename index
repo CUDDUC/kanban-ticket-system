@@ -1,135 +1,608 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Kanban Ticketing System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-    }
-
-    h1 {
-      text-align: center;
-      padding: 20px;
-    }
-
-    .board {
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-      justify-content: center;
-    }
-
-    .column {
-      background: #ffffff;
-      width: 30%;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .column h2 {
-      text-align: center;
-    }
-
-    .add-btn {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-
-    .card {
-      background: #e9edf3;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-    }
-
-    .actions button {
-      margin-top: 5px;
-      margin-right: 5px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<title>FlowBoard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c10;--s1:#111318;--s2:#181c24;--s3:#1f2330;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.2);
+  --text:#dde1ed;--muted:#606880;--muted2:#8892aa;
+  --blue:#5b8ff7;--blue-dim:rgba(91,143,247,0.15);
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);
+  --green:#34c98a;--green-dim:rgba(52,201,138,0.12);
+  --red:#f26b6b;--red-dim:rgba(242,107,107,0.12);
+  --col-todo:#5b8ff7;--col-prog:#f5a623;--col-done:#34c98a;
+  --r:10px;--r-sm:6px;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle at 18% 18%,rgba(91,143,247,0.045) 0%,transparent 50%),
+    radial-gradient(circle at 82% 82%,rgba(52,201,138,0.03) 0%,transparent 50%),
+    linear-gradient(rgba(255,255,255,0.017) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.017) 1px,transparent 1px);
+  background-size:100% 100%,100% 100%,32px 32px,32px 32px;
+}
+header{
+  position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:15px 26px;border-bottom:1px solid var(--border);
+  background:rgba(10,12,16,0.88);backdrop-filter:blur(14px);
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;letter-spacing:-.5px}
+.logo-mark{width:27px;height:27px;border-radius:7px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:var(--mono)}
+.hpills{display:flex;gap:6px;font-family:var(--mono);font-size:11px}
+.hpill{padding:4px 10px;border-radius:20px;background:var(--s2);border:1px solid var(--border2);color:var(--muted2);display:flex;align-items:center;gap:5px}
+.hpill .dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.hpill.ok .dot{background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2.5s infinite}
+.hpill.warn .dot{background:var(--amber);box-shadow:0 0 5px var(--amber)}
+.hpill.err .dot{background:var(--red);box-shadow:0 0 5px var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.header-right{display:flex;align-items:center;gap:8px}
+.view-badge{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--s2);color:var(--muted2)}
+.view-badge.editor{border-color:rgba(91,143,247,.4);color:var(--blue);background:var(--blue-dim)}
+.view-badge.viewer{border-color:rgba(245,166,35,.3);color:var(--amber);background:var(--amber-dim)}
+.icon-btn{width:33px;height:33px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--s2);color:var(--muted2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.icon-btn:hover{border-color:var(--border3);color:var(--text);background:var(--s3)}
+.board-wrap{position:relative;z-index:1;padding:22px 18px}
+.board-meta{display:flex;align-items:center;justify-content:space-between;padding:0 4px 18px}
+.board-title{font-size:23px;font-weight:700;letter-spacing:-.7px}
+.board-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+.meta-actions{display:flex;gap:6px}
+.export-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r-sm);font-family:var(--mono);font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--s2);color:var(--muted2);cursor:pointer;transition:all .15s}
+.export-btn:hover{border-color:var(--border3);color:var(--text);background:var(--s3)}
+.export-btn svg{width:11px;height:11px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;align-items:start}
+@media(max-width:760px){.board{grid-template-columns:1fr}.board-meta{flex-direction:column;align-items:flex-start;gap:10px}}
+.column{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.column.drag-over{border-color:var(--blue);box-shadow:0 0 0 1px rgba(91,143,247,.18),inset 0 0 22px rgba(91,143,247,.06)}
+.col-header{display:flex;align-items:center;justify-content:space-between;padding:13px 14px 11px;border-bottom:1px solid var(--border)}
+.col-label{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
+.col-pip{width:7px;height:7px;border-radius:50%}
+.col-count{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--s2);border:1px solid var(--border);padding:2px 8px;border-radius:20px}
+.tickets{padding:9px;min-height:54px;display:flex;flex-direction:column;gap:7px}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 13px;cursor:grab;user-select:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+.card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,0,0,.35)}
+.card.dragging{opacity:.3;transform:rotate(2deg) scale(1.03);cursor:grabbing}
+.card.readonly{cursor:default}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px}
+.card-title{font-size:13px;font-weight:500;line-height:1.5;flex:1}
+.card-acts{display:flex;gap:3px;opacity:0;transition:opacity .15s;flex-shrink:0}
+.card:hover .card-acts{opacity:1}
+.ca{width:21px;height:21px;border:none;background:none;color:var(--muted);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.ca:hover{background:rgba(255,255,255,0.07);color:var(--text)}
+.ca.del:hover{color:var(--red)}
+.card-desc{font-size:11px;color:var(--muted2);margin-bottom:9px;line-height:1.55;font-family:var(--mono)}
+.card-foot{display:flex;align-items:center;justify-content:space-between}
+.card-id{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.5}
+.tag{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+.tag-low{background:var(--green-dim);color:var(--green)}
+.tag-medium{background:var(--blue-dim);color:var(--blue)}
+.tag-high{background:var(--red-dim);color:var(--red)}
+.drop-indicator{height:2px;background:var(--blue);border-radius:2px;box-shadow:0 0 7px var(--blue);margin:2px 0;flex-shrink:0}
+.empty{text-align:center;padding:20px 8px;color:var(--muted);font-size:11px;font-family:var(--mono)}
+.add-btn{margin:0 9px 9px;width:calc(100% - 18px);padding:9px;background:transparent;border:1px dashed var(--border2);border-radius:var(--r-sm);color:var(--muted);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+.add-btn:disabled{opacity:.28;cursor:not-allowed}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(7px);opacity:0;pointer-events:none;transition:opacity .2s}
+.backdrop.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r);padding:24px;width:440px;max-width:92vw;transform:translateY(14px) scale(.98);transition:transform .2s}
+.backdrop.open .modal{transform:translateY(0) scale(1)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-head h3{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.close-btn{width:27px;height:27px;border:1px solid var(--border2);border-radius:var(--r-sm);background:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s}
+.close-btn:hover{background:var(--s3);color:var(--text)}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;font-family:var(--mono);font-weight:500}
+.field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font);font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(91,143,247,.14)}
+.field select option{background:var(--s2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.btn{padding:9px 17px;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);transition:all .15s}
+.btn-ghost{background:transparent;color:var(--muted2)}
+.btn-ghost:hover{background:var(--s2);color:var(--text)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{filter:brightness(1.1)}
+.settings-section{border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:11px}
+.settings-section h4{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:var(--mono);margin-bottom:11px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.settings-row:last-child{margin-bottom:0}
+.settings-label{font-size:12px;color:var(--muted2)}
+.sval{font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-dim);border:1px solid rgba(52,201,138,.2);padding:2px 8px;border-radius:20px}
+.sval.bad{color:var(--amber);background:var(--amber-dim);border-color:rgba(245,166,35,.2)}
+.hint{font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.65;margin-top:8px}
+.hint a{color:var(--blue)}
+.hint code{background:var(--s3);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;font-size:10px}
+.pw-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center}
+.pw-box{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r);padding:32px;width:360px;max-width:90vw;text-align:center}
+.pw-icon{font-size:26px;margin-bottom:14px;opacity:.55}
+.pw-box h2{font-size:17px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px}
+.pw-box p{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:20px;line-height:1.65}
+.pw-input{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:14px;padding:11px 14px;outline:none;text-align:center;letter-spacing:2px;transition:border-color .15s,box-shadow .15s;margin-bottom:11px}
+.pw-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(91,143,247,.14)}
+.pw-input.shake{animation:shake .38s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pw-err{font-size:11px;color:var(--red);font-family:var(--mono);height:15px;margin-bottom:10px}
+.pw-skip{margin-top:13px;font-size:11px;color:var(--muted);font-family:var(--mono);cursor:pointer}
+.pw-skip:hover{color:var(--muted2)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 15px;font-size:12px;color:var(--text);z-index:300;font-family:var(--mono);display:flex;align-items:center;gap:7px;transform:translateY(70px);opacity:0;transition:all .24s;max-width:310px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok .tdot{background:var(--green)}
+.toast.err .tdot{background:var(--red)}
+.toast.info .tdot{background:var(--blue)}
+.tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.saving{position:fixed;top:68px;right:20px;z-index:50;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;opacity:0;transition:opacity .3s;pointer-events:none}
+.saving.show{opacity:1}
+.spin{width:12px;height:12px;border:1.5px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
 </head>
-
 <body>
 
-<h1>Kanban Ticketing System</h1>
-
-<div class="board">
-  <div class="column" id="todo">
-    <h2>Todo</h2>
-    <button class="add-btn" onclick="addTicket()">+ Add Ticket</button>
-    <div class="tickets"></div>
-  </div>
-
-  <div class="column" id="inprogress">
-    <h2>In Progress</h2>
-    <div class="tickets"></div>
-  </div>
-
-  <div class="column" id="done">
-    <h2>Done</h2>
-    <div class="tickets"></div>
+<div class="pw-screen" id="pwScreen">
+  <div class="pw-box">
+    <div class="pw-icon">🔐</div>
+    <h2>FlowBoard</h2>
+    <p>Enter the editor password to make changes,<br>or view the board as read-only.</p>
+    <input class="pw-input" id="pwInput" type="password" placeholder="••••••••" autocomplete="off"/>
+    <div class="pw-err" id="pwErr"></div>
+    <button class="btn btn-primary" style="width:100%;padding:11px" onclick="tryPassword()">Unlock Editor</button>
+    <div class="pw-skip" onclick="enterAsViewer()">Continue as viewer (read-only) →</div>
   </div>
 </div>
 
+<header>
+  <div class="logo"><div class="logo-mark">FB</div>FlowBoard</div>
+  <div class="hpills">
+    <div class="hpill warn" id="ghPill"><span class="dot"></span><span id="ghStatus">not configured</span></div>
+    <div class="hpill warn" id="syncPill"><span class="dot"></span><span id="syncStatus">idle</span></div>
+  </div>
+  <div class="header-right">
+    <div class="view-badge viewer" id="viewBadge">viewer</div>
+    <button class="icon-btn" onclick="openSettings()" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.6 2.6l1 1M10.4 10.4l1 1M11.4 2.6l-1 1M3.6 10.4l-1 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="board-wrap">
+  <div class="board-meta">
+    <div>
+      <div class="board-title">Project Board</div>
+      <div class="board-sub" id="boardSub">loading…</div>
+    </div>
+    <div class="meta-actions">
+      <button class="export-btn" onclick="downloadFile('csv')">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 5.5l3 3 3-3M2 10h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download CSV
+      </button>
+      <button class="export-btn" onclick="downloadFile('json')">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 5.5l3 3 3-3M2 10h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download JSON
+      </button>
+    </div>
+  </div>
+  <div class="board">
+    <div class="column" data-status="todo">
+      <div class="col-header">
+        <div class="col-label"><div class="col-pip" style="background:var(--col-todo)"></div>Todo</div>
+        <div class="col-count" id="count-todo">0</div>
+      </div>
+      <div class="tickets" id="tickets-todo"></div>
+      <button class="add-btn" id="addbtn-todo" onclick="openTicketModal('todo')">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Add ticket
+      </button>
+    </div>
+    <div class="column" data-status="inprogress">
+      <div class="col-header">
+        <div class="col-label"><div class="col-pip" style="background:var(--col-prog)"></div>In Progress</div>
+        <div class="col-count" id="count-inprogress">0</div>
+      </div>
+      <div class="tickets" id="tickets-inprogress"></div>
+      <button class="add-btn" id="addbtn-inprogress" onclick="openTicketModal('inprogress')">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Add ticket
+      </button>
+    </div>
+    <div class="column" data-status="done">
+      <div class="col-header">
+        <div class="col-label"><div class="col-pip" style="background:var(--col-done)"></div>Done</div>
+        <div class="col-count" id="count-done">0</div>
+      </div>
+      <div class="tickets" id="tickets-done"></div>
+      <button class="add-btn" id="addbtn-done" onclick="openTicketModal('done')">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Add ticket
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="saving" id="savingInd"><div class="spin"></div>saving to GitHub…</div>
+
+<div class="backdrop" id="ticketBackdrop" onclick="backdropClose('ticketBackdrop',closeTicketModal,event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="ticketModalTitle">New Ticket</h3>
+      <button class="close-btn" onclick="closeTicketModal()">&#xD7;</button>
+    </div>
+    <div class="field"><label>Title *</label><input type="text" id="tTitle" placeholder="What needs to be done?"/></div>
+    <div class="field"><label>Description</label><textarea id="tDesc" rows="2" placeholder="Optional details…"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Priority</label>
+        <select id="tPriority"><option value="medium">Medium</option><option value="low">Low</option><option value="high">High</option></select>
+      </div>
+      <div class="field"><label>Assignee</label><input type="text" id="tAssignee" placeholder="@username"/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeTicketModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTicket()">Save ticket</button>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="settingsBackdrop" onclick="backdropClose('settingsBackdrop',closeSettings,event)">
+  <div class="modal" style="width:480px">
+    <div class="modal-head">
+      <h3>Settings &amp; GitHub Storage</h3>
+      <button class="close-btn" onclick="closeSettings()">&#xD7;</button>
+    </div>
+    <div class="settings-section">
+      <h4>GitHub Integration</h4>
+      <div class="field"><label>Personal Access Token</label><input type="password" id="sToken" placeholder="ghp_xxxxxxxxxxxxxxxx"/></div>
+      <div class="field-row">
+        <div class="field"><label>Owner / Org</label><input type="text" id="sOwner" placeholder="your-username"/></div>
+        <div class="field"><label>Repository</label><input type="text" id="sRepo" placeholder="my-kanban"/></div>
+      </div>
+      <div class="field"><label>Branch</label><input type="text" id="sBranch" placeholder="main"/></div>
+      <div class="hint">
+        1. Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a><br>
+        2. Create token with <code>repo</code> scope<br>
+        3. Paste it above — stored only in your browser, sent only to GitHub API.<br><br>
+        Data is saved as <code>data/tickets.json</code> and <code>data/tickets.csv</code> in your repo automatically on every change.
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Editor Password</h4>
+      <div class="field"><label>New password (blank = keep current)</label><input type="password" id="sPassword" placeholder="new password…"/></div>
+      <div class="hint">Anyone who enters this password can edit. Others see the board as read-only.</div>
+    </div>
+    <div class="settings-section">
+      <h4>Status</h4>
+      <div class="settings-row"><span class="settings-label">GitHub configured</span><span class="sval bad" id="stGH">no</span></div>
+      <div class="settings-row"><span class="settings-label">Current role</span><span class="sval bad" id="stRole">viewer</span></div>
+      <div class="settings-row"><span class="settings-label">Tickets in board</span><span class="sval" id="stCount">0</span></div>
+      <div class="settings-row"><span class="settings-label">Last saved to GitHub</span><span class="sval" id="stLast">never</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save &amp; apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="tdot"></div><span id="toastMsg"></span></div>
+
 <script>
-  let data = JSON.parse(localStorage.getItem("tickets")) || {
-    todo: [],
-    inprogress: [],
-    done: []
+/* ── CONFIG ── Change DEFAULT_PASSWORD before deploying */
+const DEFAULT_PASSWORD = 'kanban123';
+const JSON_PATH = 'data/tickets.json';
+const CSV_PATH  = 'data/tickets.csv';
+
+let cfg={}, isEditor=false, state={todo:[],inprogress:[],done:[]};
+let draggedId=null, dropTarget={status:null,index:null}, editingId=null, modalStatus=null, lastSavedAt=null;
+
+function init(){
+  cfg={
+    token:   ls('gh_token')||'', owner:ls('gh_owner')||'',
+    repo:    ls('gh_repo')||'',  branch:ls('gh_branch')||'main',
+    password:ls('board_pw')||DEFAULT_PASSWORD,
   };
+  loadLocal(); render();
+  if(isGHConfigured()) loadFromGitHub();
+  document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryPassword();});
+}
+const isGHConfigured=()=>!!(cfg.token&&cfg.owner&&cfg.repo);
 
-  function save() {
-    localStorage.setItem("tickets", JSON.stringify(data));
-  }
-
-  function render() {
-    ["todo", "inprogress", "done"].forEach(col => {
-      const container = document.querySelector(`#${col} .tickets`);
-      container.innerHTML = "";
-
-      data[col].forEach((ticket, index) => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <p>${ticket}</p>
-          <div class="actions">
-            ${col !== "todo" ? `<button onclick="move('${col}', 'todo', ${index})">← Todo</button>` : ""}
-            ${col !== "inprogress" ? `<button onclick="move('${col}', 'inprogress', ${index})">→ In Progress</button>` : ""}
-            ${col !== "done" ? `<button onclick="move('${col}', 'done', ${index})">✓ Done</button>` : ""}
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    });
-
-    save();
-  }
-
-  function addTicket() {
-    const title = prompt("Enter ticket name:");
-    if (!title) return;
-    data.todo.push(title);
+/* ── PASSWORD ── */
+function tryPassword(){
+  if(document.getElementById('pwInput').value===cfg.password){
+    isEditor=true;
+    document.getElementById('pwScreen').style.display='none';
     render();
+    setPill('ghPill','ghStatus',isGHConfigured()?'ok':'warn',isGHConfigured()?'github ok':'not configured');
+    showToast('Unlocked as editor','ok');
+  } else {
+    const inp=document.getElementById('pwInput');
+    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+    document.getElementById('pwErr').textContent='Wrong password';
+    setTimeout(()=>document.getElementById('pwErr').textContent='',2200);
   }
-
-  function move(from, to, index) {
-    const [ticket] = data[from].splice(index, 1);
-    data[to].push(ticket);
-    render();
-  }
-
+}
+function enterAsViewer(){
+  document.getElementById('pwScreen').style.display='none';
   render();
-</script>
+  setPill('ghPill','ghStatus',isGHConfigured()?'ok':'warn',isGHConfigured()?'github ok':'not configured');
+}
 
+/* ── GITHUB API ── */
+const ghH=()=>({'Authorization':`token ${cfg.token}`,'Content-Type':'application/json','Accept':'application/vnd.github+json'});
+async function ghGet(path){
+  const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${cfg.branch}&_=${Date.now()}`,{headers:ghH()});
+  if(r.status===404) return null;
+  if(!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(()=>({}))).message||''}`);
+  return r.json();
+}
+async function ghPut(path,content,sha){
+  const body={message:`chore: update ${path} via FlowBoard`,content:btoa(unescape(encodeURIComponent(content))),branch:cfg.branch};
+  if(sha) body.sha=sha;
+  const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(()=>({}))).message||''}`);
+  return r.json();
+}
+
+async function loadFromGitHub(){
+  setPill('syncPill','syncStatus','warn','loading…');
+  try{
+    const file=await ghGet(JSON_PATH);
+    if(file){
+      const raw=decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
+      const parsed=JSON.parse(raw);
+      const m={todo:[],inprogress:[],done:[]};
+      (parsed.tickets||[]).forEach(t=>{if(m[t.status])m[t.status].push(t);});
+      for(const s in m) m[s].sort((a,b)=>(a.order||0)-(b.order||0));
+      state=m; saveLocal(); render();
+    }
+    setPill('ghPill','ghStatus','ok','github ok');
+    setPill('syncPill','syncStatus','ok','synced');
+  }catch(e){
+    setPill('syncPill','syncStatus','err','load error');
+    showToast('GitHub load failed: '+e.message,'err');
+  }
+}
+
+async function saveToGitHub(){
+  if(!isGHConfigured()||!isEditor) return;
+  setPill('syncPill','syncStatus','warn','saving…');
+  document.getElementById('savingInd').classList.add('show');
+  try{
+    const [jf,cf]=await Promise.all([ghGet(JSON_PATH).catch(()=>null),ghGet(CSV_PATH).catch(()=>null)]);
+    await Promise.all([ghPut(JSON_PATH,buildJSON(),jf&&jf.sha),ghPut(CSV_PATH,buildCSV(),cf&&cf.sha)]);
+    lastSavedAt=new Date();
+    setPill('syncPill','syncStatus','ok','synced');
+    document.getElementById('stLast').textContent=lastSavedAt.toLocaleTimeString();
+    showToast('Saved to GitHub — tickets.json + tickets.csv','ok');
+  }catch(e){
+    setPill('syncPill','syncStatus','err','save failed');
+    showToast('Save failed: '+e.message,'err');
+  }finally{
+    document.getElementById('savingInd').classList.remove('show');
+  }
+}
+
+/* ── DATA ── */
+function allTickets(){
+  const a=[];
+  ['todo','inprogress','done'].forEach(s=>(state[s]||[]).forEach((t,i)=>a.push({...t,status:s,order:i})));
+  return a;
+}
+function buildJSON(){ return JSON.stringify({updatedAt:new Date().toISOString(),tickets:allTickets()},null,2); }
+function buildCSV(){
+  const f=['id','title','desc','status','priority','assignee','order','createdAt'];
+  const e=v=>{if(v==null)return'';const s=String(v);return(s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;};
+  return[f.join(','),...allTickets().map(t=>f.map(k=>e(t[k])).join(','))].join('\n');
+}
+function downloadFile(type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([type==='csv'?buildCSV():buildJSON()],{type:type==='csv'?'text/csv':'application/json'}));
+  a.download='tickets.'+type; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ── LOCAL STORAGE ── */
+const ls=k=>localStorage.getItem(k);
+const lsSet=(k,v)=>localStorage.setItem(k,v);
+function loadLocal(){try{state=JSON.parse(ls('kanbanState'))||state;}catch(e){}}
+function saveLocal(){lsSet('kanbanState',JSON.stringify(state));}
+
+let saveTimer;
+function persist(){saveLocal();clearTimeout(saveTimer);saveTimer=setTimeout(saveToGitHub,900);}
+
+/* ── RENDER ── */
+function render(){
+  let total=0,done=0;
+  ['todo','inprogress','done'].forEach(status=>{
+    const container=document.getElementById('tickets-'+status);
+    const tickets=state[status]||[];
+    total+=tickets.length; if(status==='done')done=tickets.length;
+    document.getElementById('count-'+status).textContent=tickets.length;
+    document.getElementById('addbtn-'+status).disabled=!isEditor;
+    container.innerHTML='';
+    if(!tickets.length){
+      const e=document.createElement('div');e.className='empty';
+      e.innerHTML='<div style="font-size:18px;margin-bottom:5px;opacity:.28">&#9675;</div>No tickets here';
+      container.appendChild(e);
+    }
+    tickets.forEach((ticket,index)=>{
+      const card=document.createElement('div');
+      card.className='card'+(isEditor?'':' readonly');
+      card.draggable=isEditor;
+      card.innerHTML=`
+        <div class="card-top">
+          <div class="card-title">${esc(ticket.title)}</div>
+          ${isEditor?`<div class="card-acts">
+            <button class="ca" onclick="openTicketModal('${status}','${ticket.id}')">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M7.5 1.5l2 2-5.5 5.5H2v-2L7.5 1.5z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="ca del" onclick="deleteTicket('${ticket.id}')">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 3h7M4.5 3V2h2v1M3.5 9h4l.5-5.5h-5L3.5 9z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>`:''}
+        </div>
+        ${ticket.desc?`<div class="card-desc">${esc(ticket.desc)}</div>`:''}
+        <div class="card-foot">
+          <div class="card-id">#${ticket.id.slice(-6)}${ticket.assignee?' · '+esc(ticket.assignee):''}</div>
+          <div class="tag tag-${ticket.priority||'medium'}">${ticket.priority||'medium'}</div>
+        </div>`;
+      if(isEditor){
+        card.addEventListener('dragstart',e=>{draggedId=ticket.id;e.dataTransfer.effectAllowed='move';setTimeout(()=>card.classList.add('dragging'),0);});
+        card.addEventListener('dragend',()=>{draggedId=null;card.classList.remove('dragging');clearInds();document.querySelectorAll('.column').forEach(c=>c.classList.remove('drag-over'));dropTarget={status:null,index:null};});
+      }
+      container.appendChild(card);
+    });
+  });
+  document.getElementById('boardSub').textContent=`${total} ticket${total!==1?'s':''} · ${done} done`;
+  document.getElementById('viewBadge').className='view-badge '+(isEditor?'editor':'viewer');
+  document.getElementById('viewBadge').textContent=isEditor?'editor':'viewer';
+}
+
+/* ── DRAG (board-level delegation) ── */
+function clearInds(){document.querySelectorAll('.drop-indicator').forEach(i=>i.remove());}
+
+function setupDragBoard(){
+  const board=document.querySelector('.board');
+  if(!board)return;
+
+  board.addEventListener('dragover',e=>{
+    if(!draggedId)return;
+    e.preventDefault();e.dataTransfer.dropEffect='move';
+
+    /* find which column we're over */
+    const col=e.target.closest('.column');
+    if(!col)return;
+    const status=col.dataset.status;
+    document.querySelectorAll('.column').forEach(c=>c.classList.toggle('drag-over',c===col));
+
+    /* find which card we're hovering (skip the dragging card & indicators) */
+    clearInds();
+    const cards=[...col.querySelectorAll('.card:not(.dragging)')];
+    if(!cards.length){
+      dropTarget={status,index:0};
+      return;
+    }
+    let placed=false;
+    for(let i=0;i<cards.length;i++){
+      const rect=cards[i].getBoundingClientRect();
+      if(e.clientY<rect.top+rect.height/2){
+        const ind=document.createElement('div');ind.className='drop-indicator';
+        cards[i].before(ind);
+        dropTarget={status,index:i};
+        placed=true;break;
+      }
+    }
+    if(!placed){
+      const ind=document.createElement('div');ind.className='drop-indicator';
+      cards[cards.length-1].after(ind);
+      dropTarget={status,index:cards.length};
+    }
+  });
+
+  board.addEventListener('drop',e=>{
+    e.preventDefault();
+    if(!draggedId||!dropTarget.status)return;
+    let moved;
+    for(const s in state){const i=state[s].findIndex(t=>t.id===draggedId);if(i!==-1){[moved]=state[s].splice(i,1);break;}}
+    if(!moved)return;
+    moved.status=dropTarget.status;
+    state[dropTarget.status].splice(dropTarget.index,0,moved);
+    clearInds();
+    document.querySelectorAll('.column').forEach(c=>c.classList.remove('drag-over'));
+    render();persist();
+  });
+
+  board.addEventListener('dragleave',e=>{
+    if(!board.contains(e.relatedTarget)){
+      clearInds();
+      document.querySelectorAll('.column').forEach(c=>c.classList.remove('drag-over'));
+    }
+  });
+}
+
+/* ── TICKET MODAL ── */
+window.openTicketModal=function(status,id){
+  if(!isEditor) return;
+  modalStatus=status; editingId=id||null;
+  const t=id?findTicket(id):null;
+  document.getElementById('ticketModalTitle').textContent=id?'Edit Ticket':'New Ticket';
+  document.getElementById('tTitle').value=t&&t.title||'';
+  document.getElementById('tDesc').value=t&&t.desc||'';
+  document.getElementById('tPriority').value=t&&t.priority||'medium';
+  document.getElementById('tAssignee').value=t&&t.assignee||'';
+  document.getElementById('ticketBackdrop').classList.add('open');
+  setTimeout(()=>document.getElementById('tTitle').focus(),150);
+};
+window.closeTicketModal=()=>{document.getElementById('ticketBackdrop').classList.remove('open');editingId=null;};
+window.saveTicket=function(){
+  const title=document.getElementById('tTitle').value.trim();
+  if(!title){document.getElementById('tTitle').focus();return;}
+  const data={title,desc:document.getElementById('tDesc').value.trim(),priority:document.getElementById('tPriority').value,assignee:document.getElementById('tAssignee').value.trim()};
+  if(editingId){Object.assign(findTicket(editingId),data);}
+  else{state[modalStatus].push({id:crypto.randomUUID(),...data,status:modalStatus,order:state[modalStatus].length,createdAt:new Date().toISOString()});}
+  closeTicketModal(); render(); persist();
+  showToast(editingId?'Ticket updated':'Ticket created','ok');
+  editingId=null;
+};
+window.deleteTicket=function(id){
+  for(const s in state){const i=state[s].findIndex(t=>t.id===id);if(i!==-1){state[s].splice(i,1);break;}}
+  render(); persist(); showToast('Ticket deleted','info');
+};
+
+/* ── SETTINGS ── */
+window.openSettings=function(){
+  document.getElementById('sToken').value=cfg.token;
+  document.getElementById('sOwner').value=cfg.owner;
+  document.getElementById('sRepo').value=cfg.repo;
+  document.getElementById('sBranch').value=cfg.branch;
+  document.getElementById('sPassword').value='';
+  document.getElementById('stGH').textContent=isGHConfigured()?'yes':'no';
+  document.getElementById('stGH').className='sval'+(isGHConfigured()?'':' bad');
+  document.getElementById('stRole').textContent=isEditor?'editor':'viewer';
+  document.getElementById('stRole').className='sval'+(isEditor?'':' bad');
+  document.getElementById('stCount').textContent=allTickets().length;
+  document.getElementById('stLast').textContent=lastSavedAt?lastSavedAt.toLocaleTimeString():'never';
+  document.getElementById('settingsBackdrop').classList.add('open');
+};
+window.closeSettings=()=>document.getElementById('settingsBackdrop').classList.remove('open');
+window.saveSettings=async function(){
+  const vals={token:document.getElementById('sToken').value.trim(),owner:document.getElementById('sOwner').value.trim(),repo:document.getElementById('sRepo').value.trim(),branch:document.getElementById('sBranch').value.trim()||'main'};
+  for(const k in vals) if(vals[k]){cfg[k]=vals[k];lsSet('gh_'+k,vals[k]);}
+  const pw=document.getElementById('sPassword').value;
+  if(pw){cfg.password=pw;lsSet('board_pw',pw);}
+  closeSettings();
+  setPill('ghPill','ghStatus',isGHConfigured()?'ok':'warn',isGHConfigured()?'github ok':'not configured');
+  if(isGHConfigured()){await loadFromGitHub();showToast('Settings saved — syncing from GitHub…','info');}
+  else showToast('Settings saved (GitHub not fully configured)','info');
+};
+
+/* ── HELPERS ── */
+function setPill(pid,sid,type,text){
+  document.getElementById(pid).className='hpill '+(type==='ok'?'ok':type==='warn'?'warn':'err');
+  document.getElementById(sid).textContent=text;
+}
+const findTicket=id=>{for(const s in state){const t=state[s].find(t=>t.id===id);if(t)return t;}};
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function backdropClose(id,fn,e){if(e.target===document.getElementById(id))fn();}
+
+let toastTimer;
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  el.className=`toast ${type||'info'} show`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeTicketModal();closeSettings();}
+  if(e.key==='Enter'&&document.getElementById('ticketBackdrop').classList.contains('open')&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();saveTicket();}
+});
+
+init();
+setupDragBoard();
+</script>
 </body>
 </html>
