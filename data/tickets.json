@@ -1,16 +1,6 @@
 {
-  "updatedAt": "2026-04-14T09:16:52.383Z",
+  "updatedAt": "2026-04-14T09:16:54.747Z",
   "tickets": [
-    {
-      "id": "f04061e8-2f05-4dab-b3fe-585645a47761",
-      "title": "Friday",
-      "desc": "",
-      "priority": "high",
-      "assignee": "",
-      "status": "todo",
-      "order": 0,
-      "createdAt": "2026-04-14T09:16:08.039Z"
-    },
     {
       "id": "659b649d-b9c2-46f3-9c1e-fea467bf15f9",
       "title": "Monday",
@@ -30,6 +20,16 @@
       "status": "inprogress",
       "order": 1,
       "createdAt": "2026-04-14T09:15:53.207Z"
+    },
+    {
+      "id": "f04061e8-2f05-4dab-b3fe-585645a47761",
+      "title": "Friday",
+      "desc": "",
+      "priority": "high",
+      "assignee": "",
+      "status": "inprogress",
+      "order": 2,
+      "createdAt": "2026-04-14T09:16:08.039Z"
     }
   ]
 }
