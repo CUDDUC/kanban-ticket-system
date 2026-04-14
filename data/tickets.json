@@ -1,6 +1,16 @@
 {
-  "updatedAt": "2026-04-14T09:15:41.495Z",
+  "updatedAt": "2026-04-14T09:15:54.111Z",
   "tickets": [
+    {
+      "id": "810e5611-2ac3-4687-98cb-0123782cc5ba",
+      "title": "Tuesday",
+      "desc": "",
+      "priority": "medium",
+      "assignee": "",
+      "status": "todo",
+      "order": 0,
+      "createdAt": "2026-04-14T09:15:53.207Z"
+    },
     {
       "id": "659b649d-b9c2-46f3-9c1e-fea467bf15f9",
       "title": "Monday",
