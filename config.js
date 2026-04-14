@@ -18,17 +18,17 @@
 
 window.__FLOWBOARD_CONFIG__ = {
   // Your GitHub username (e.g. 'johndoe')
-  owner: 'YOUR_GITHUB_USERNAME',
+  owner: 'CUDDUC',
 
   // The repo name where tickets.json/csv will be saved (e.g. 'my-kanban')
-  repo: 'YOUR_REPO_NAME',
+  repo: 'kanban-ticket-system',
 
   // Branch to save files to (almost always 'main')
   branch: 'main',
 
   // Fine-grained PAT — needs Contents: Read & write on your repo
   // Create one at: https://github.com/settings/tokens?type=beta
-  token: 'YOUR_GITHUB_PAT',
+  token: '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',
 
   // Password users must enter to edit the board
   // Viewers who don't know this see it as read-only
