@@ -1,0 +1,16 @@
+# ╔══════════════════════════════════════════════╗
+# ║  .gitignore — FlowBoard                      ║
+# ║  config.js holds your token + password.      ║
+# ║  It is NEVER pushed to GitHub.               ║
+# ╚══════════════════════════════════════════════╝
+
+# Private config — contains GitHub token and board password
+config.js
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
