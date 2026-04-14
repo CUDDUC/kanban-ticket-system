@@ -332,18 +332,42 @@ function enterAsViewer(){
 
 /* ── GITHUB API ── */
 const ghH=()=>({'Authorization':`token ${cfg.token}`,'Content-Type':'application/json','Accept':'application/vnd.github+json'});
+
+/* SHA cache — avoids re-fetching and prevents 409 race conditions */
+const shaCache={};
+
 async function ghGet(path){
   const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${cfg.branch}&_=${Date.now()}`,{headers:ghH()});
   if(r.status===404) return null;
   if(!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(()=>({}))).message||''}`);
-  return r.json();
+  const data=await r.json();
+  if(data.sha) shaCache[path]=data.sha; /* cache the SHA */
+  return data;
 }
-async function ghPut(path,content,sha){
-  const body={message:`chore: update ${path} via FlowBoard`,content:btoa(unescape(encodeURIComponent(content))),branch:cfg.branch};
-  if(sha) body.sha=sha;
+
+async function ghPut(path,content){
+  const body={
+    message:`chore: update ${path} via FlowBoard`,
+    content:btoa(unescape(encodeURIComponent(content))),
+    branch:cfg.branch
+  };
+  /* always use cached SHA if we have one — this prevents 409 */
+  if(shaCache[path]) body.sha=shaCache[path];
   const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
+  if(r.status===409){
+    /* conflict — someone else wrote; re-fetch SHA and retry once */
+    const fresh=await ghGet(path);
+    if(fresh) body.sha=fresh.sha;
+    const r2=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
+    if(!r2.ok) throw new Error(`GitHub ${r2.status}: ${(await r2.json().catch(()=>({}))).message||''}`);
+    const d2=await r2.json();
+    if(d2.content&&d2.content.sha) shaCache[path]=d2.content.sha;
+    return d2;
+  }
   if(!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(()=>({}))).message||''}`);
-  return r.json();
+  const d=await r.json();
+  if(d.content&&d.content.sha) shaCache[path]=d.content.sha; /* update SHA cache after write */
+  return d;
 }
 
 async function loadFromGitHub(){
@@ -354,10 +378,18 @@ async function loadFromGitHub(){
       const raw=decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
       const parsed=JSON.parse(raw);
       const m={todo:[],inprogress:[],done:[]};
-      (parsed.tickets||[]).forEach(t=>{if(m[t.status])m[t.status].push(t);});
+      /* support both formats: {tickets:[]} and {todo:[],inprogress:[],done:[]} */
+      if(Array.isArray(parsed.tickets)){
+        parsed.tickets.forEach(t=>{if(m[t.status])m[t.status].push(t);});
+      } else {
+        ['todo','inprogress','done'].forEach(s=>{if(Array.isArray(parsed[s]))m[s]=parsed[s];});
+      }
       for(const s in m) m[s].sort((a,b)=>(a.order||0)-(b.order||0));
       state=m; saveLocal(); render();
     }
+    /* also cache CSV sha so first save doesn't 409 */
+    const cf=await ghGet(CSV_PATH).catch(()=>null);
+    if(cf&&cf.sha) shaCache[CSV_PATH]=cf.sha;
     setPill('ghPill','ghStatus','ok','github ok');
     setPill('syncPill','syncStatus','ok','synced');
   }catch(e){
@@ -366,22 +398,27 @@ async function loadFromGitHub(){
   }
 }
 
+/* save queue — ensures saves never run in parallel (prevents 409) */
+let _saveRunning=false, _savePending=false;
 async function saveToGitHub(){
   if(!isGHConfigured()||!isEditor) return;
+  if(_saveRunning){ _savePending=true; return; } /* queue one pending save */
+  _saveRunning=true;
   setPill('syncPill','syncStatus','warn','saving…');
   document.getElementById('savingInd').classList.add('show');
   try{
-    const [jf,cf]=await Promise.all([ghGet(JSON_PATH).catch(()=>null),ghGet(CSV_PATH).catch(()=>null)]);
-    await Promise.all([ghPut(JSON_PATH,buildJSON(),jf&&jf.sha),ghPut(CSV_PATH,buildCSV(),cf&&cf.sha)]);
+    await Promise.all([ghPut(JSON_PATH,buildJSON()),ghPut(CSV_PATH,buildCSV())]);
     lastSavedAt=new Date();
     setPill('syncPill','syncStatus','ok','synced');
     document.getElementById('stLast').textContent=lastSavedAt.toLocaleTimeString();
-    showToast('Saved to GitHub — tickets.json + tickets.csv','ok');
+    showToast('Saved → tickets.json + tickets.csv','ok');
   }catch(e){
     setPill('syncPill','syncStatus','err','save failed');
     showToast('Save failed: '+e.message,'err');
   }finally{
     document.getElementById('savingInd').classList.remove('show');
+    _saveRunning=false;
+    if(_savePending){ _savePending=false; saveToGitHub(); } /* run queued save */
   }
 }
 
