@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-15T11:14:40.721Z",
+  "updatedAt": "2026-04-15T12:31:23.141Z",
   "tickets": [
     {
       "id": "f04061e8-2f05-4dab-b3fe-585645a47761",
@@ -7,7 +7,7 @@
       "desc": "",
       "priority": "high",
       "assignee": "",
-      "status": "todo",
+      "status": "inprogress",
       "order": 0,
       "createdAt": "2026-04-14T09:16:08.039Z"
     },
