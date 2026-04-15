@@ -1,4 +1,4 @@
 id,title,desc,status,priority,assignee,order,createdAt
-659b649d-b9c2-46f3-9c1e-fea467bf15f9,Monday,,inprogress,medium,,0,2026-04-14T07:01:06.966Z
-810e5611-2ac3-4687-98cb-0123782cc5ba,Tuesday,,inprogress,medium,,1,2026-04-14T09:15:53.207Z
-f04061e8-2f05-4dab-b3fe-585645a47761,Friday,,inprogress,high,,2,2026-04-14T09:16:08.039Z
+810e5611-2ac3-4687-98cb-0123782cc5ba,Tuesday,,inprogress,medium,,0,2026-04-14T09:15:53.207Z
+f04061e8-2f05-4dab-b3fe-585645a47761,Friday,,inprogress,high,,1,2026-04-14T09:16:08.039Z
+659b649d-b9c2-46f3-9c1e-fea467bf15f9,Monday,,done,medium,,0,2026-04-14T07:01:06.966Z
