@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-20T08:14:43.545Z",
+  "updatedAt": "2026-04-20T08:14:45.827Z",
   "tickets": [
     {
       "id": "f04061e8-2f05-4dab-b3fe-585645a47761",
@@ -17,8 +17,8 @@
       "desc": "",
       "priority": "medium",
       "assignee": "",
-      "status": "done",
-      "order": 0,
+      "status": "inprogress",
+      "order": 1,
       "createdAt": "2026-04-14T07:01:06.966Z"
     },
     {
@@ -27,8 +27,8 @@
       "desc": "",
       "priority": "medium",
       "assignee": "",
-      "status": "done",
-      "order": 1,
+      "status": "inprogress",
+      "order": 2,
       "createdAt": "2026-04-14T09:15:53.207Z"
     }
   ]
